@@ -1,0 +1,36 @@
+{
+  "name": "rxjs-websockets",
+  "version": "1.0.0",
+  "description": "A beginner approach to websockets in Rxjs",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "node bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luillyfe/rxjs-websockets.git"
+  },
+  "keywords": [
+    "rxjs",
+    "websokets",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Fermin Blanco",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luillyfe/rxjs-websockets/issues"
+  },
+  "homepage": "https://github.com/luillyfe/rxjs-websockets#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.10.3",
+    "typescript": "^3.1.2"
+  }
+}
