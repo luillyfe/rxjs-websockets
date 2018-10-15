@@ -37,14 +37,14 @@ const news = url => new Promise((resolve, reject) => {
 
 
 wss.on("connection", ws => {
-    let page = 1;
+    let page = 1, topic = "Game of thrones";
 
     //send immediatly a feedback to the incoming connection
     ws.send('{"message": "Conecction successfull!", "state": "ok"}');
 
     // look for news every 5 seconds en send them to the client.
     setInterval(() => {
-        news(dataSourceUrl("Google", page))
+        news(dataSourceUrl(topic, page))
             .then(response => {
                 if (response.status === "ok") {
                     ws.send(JSON.stringify(response.articles));
@@ -54,5 +54,10 @@ wss.on("connection", ws => {
                 }
             });
         page++;
-    }, 5000);
+    }, 10000);
+
+    ws.on("message", message => {
+        console.log(message);
+        topic = message;
+    })
 });
