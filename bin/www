@@ -47,7 +47,8 @@ wss.on("connection", ws => {
         news(dataSourceUrl(topic, page))
             .then(response => {
                 if (response.status === "ok") {
-                    ws.send(JSON.stringify(response.articles));
+                    const message = {type: "news", articles: JSON.stringify(response.articles)};
+                    ws.send(JSON.stringify(message));
                 } else {
                     console.log(response.message);
                     ws.send('{"message": "Something were wring!", "state": "Service Unavailable"}');
@@ -57,7 +58,13 @@ wss.on("connection", ws => {
     }, 10000);
 
     ws.on("message", message => {
-        console.log(message);
-        topic = message;
-    })
+        let formmatedMsg = JSON.parse(message);
+        formmatedMsg = (typeof formmatedMsg === "string") ? JSON.parse(formmatedMsg) : formmatedMsg;
+
+        if (formmatedMsg.subscribe === "chat") {
+            ws.send(JSON.stringify({type: "chat", message: "we heard you!"}))
+        } else {
+            topic = message;
+        }
+    });
 });
