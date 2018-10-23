@@ -1,9 +1,37 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
+import "babel-polyfill";
 import { webSocket } from "rxjs/webSocket";
 import { map } from "rxjs/operators";
+import { Subject, concat } from "rxjs";
 
-const WebSocketSubject = webSocket("ws://localhost:3200");
+const blobSubject = new Subject(), reader = new FileReader();
+const blobMessages$ = blobSubject.asObservable();
+let chunks = [];
+reader.onloadend = event => {
+    const response = new TextDecoder("utf-8").decode(event.target.result);
+    const message = { type: "Blob", articles: JSON.parse(response).articles };
+    blobSubject.next(message);
+};
+
+function deserializer (msg) {
+    if (msg.data === "end" && chunks.length > 0) {
+        reader.readAsArrayBuffer(new Blob(chunks));
+        chunks = [];
+        return { type: "Blob", articles: [] };
+    } else {
+        if (msg.data && msg.data.type === "") {
+            chunks.push(msg.data);
+        } else  {
+            return JSON.parse(msg.data);
+        }
+    }
+    return { type: "error" };
+}
+const WebSocketSubject = webSocket({
+    url: "ws://localhost:3200",
+    deserializer
+});
 
 
 const setTopic = (event = {target: {innerText: "Technology"}}) => {
@@ -11,7 +39,7 @@ const setTopic = (event = {target: {innerText: "Technology"}}) => {
 };
 const brokenImg = event => {
     event.target.attr('src', 'https://via.placeholder.com/350x150');
-}
+};
 
 const setCardInfo = (
     card = document,
@@ -38,11 +66,28 @@ const chat = WebSocketSubject.multiplex(
     message => message.type === "chat"
 ).pipe(map(message => message.message));
 
-const news = WebSocketSubject.multiplex(
-    () => JSON.stringify({subscribe: "news"}),
-    () => JSON.stringify({unsubscribe: "news"}),
-    message => message.type === "news"
-).pipe(map(message => JSON.parse(message.articles)));
+const binary = WebSocketSubject.multiplex(
+    () => JSON.stringify({subscribe: "Blob"}),
+    () => JSON.stringify({unsubscribe: "Blob"}),
+    message => message.type === "Blob"
+).pipe(
+    map(message => {
+        if (message.articles && message.articles.length > 0) {
+            return message.articles;
+        }
+        return { message: "No data!" };
+    })
+);
+blobMessages$.pipe(
+    map(message => {
+        if (message.articles && message.articles.length > 0) {
+            return message.articles;
+        }
+        return { message: "No data!" };
+    })
+);
+const news = concat(blobMessages$, binary);
+
 
 WebSocketSubject.subscribe(
     response => {
@@ -57,7 +102,9 @@ WebSocketSubject.subscribe(
         }
     }, console.log, () => console.log("Websocket closed!"));
 
-news.subscribe(articles => {
+chat.subscribe(message => console.log(`Comming from Chat channel, ${message}`));
+
+news.subscribe(({articles}) => {
     if (articles.length >= 3) {
         const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
         carusellActive.forEach((card, index) => {
@@ -69,5 +116,3 @@ news.subscribe(articles => {
         setTopic();
     }
 });
-
-chat.subscribe(message => console.log(`Comming from Chat channel, ${message}`));

@@ -23,39 +23,26 @@ http.listen(port, () => {
     console.log(`Server started and listening on ${port} port`);
 });
 
-const news = url => new Promise((resolve, reject) => {
-    https.get(url, response => {
-        let data = "";
-        response.on("data", chunk => {
-            data += chunk;
-        });
-        response.on("end", () => {
-            resolve(JSON.parse(data));
-        });
-    }).on("error", error => reject(error));
-});
-
 
 wss.on("connection", ws => {
-    let page = 1, topic = "Game of thrones";
+    let page = 1, topic = "Microsoft";
 
     //send immediatly a feedback to the incoming connection
     ws.send('{"message": "Conecction successfull!", "state": "ok"}');
 
-    // look for news every 5 seconds en send them to the client.
+    // look for news every 25 seconds en send them to the client.
     setInterval(() => {
-        news(dataSourceUrl(topic, page))
-            .then(response => {
-                if (response.status === "ok") {
-                    const message = {type: "news", articles: JSON.stringify(response.articles)};
-                    ws.send(JSON.stringify(message));
-                } else {
-                    console.log(response.message);
-                    ws.send('{"message": "Something were wring!", "state": "Service Unavailable"}');
-                }
+        https.get(dataSourceUrl(topic, page), response => {
+            console.log(`Chunk ${page}`);
+            response.on("data", chunk => {
+                ws.send(chunk);
             });
+            response.on("end", () => {
+                ws.send("end");
+            });
+        }).on("error", console.log);
         page++;
-    }, 10000);
+    }, 25000);
 
     ws.on("message", message => {
         let formmatedMsg = JSON.parse(message);
