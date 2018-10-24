@@ -2,11 +2,19 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
 import "babel-polyfill";
 import { webSocket } from "rxjs/webSocket";
-import { map } from "rxjs/operators";
-import { Subject, concat } from "rxjs";
+import { map, filter } from "rxjs/operators";
+import { Subject } from "rxjs";
 
 const blobSubject = new Subject(), reader = new FileReader();
-const blobMessages$ = blobSubject.asObservable();
+const news$ = blobSubject.asObservable().pipe(
+    filter(message => message.type === "Blob"),
+    map(message => {
+        if (message.articles && message.articles.length > 0) {
+            return message.articles;
+        }
+        return { message: "No data!" };
+    })
+);
 let chunks = [];
 reader.onloadend = event => {
     const response = new TextDecoder("utf-8").decode(event.target.result);
@@ -66,28 +74,6 @@ const chat = WebSocketSubject.multiplex(
     message => message.type === "chat"
 ).pipe(map(message => message.message));
 
-const binary = WebSocketSubject.multiplex(
-    () => JSON.stringify({subscribe: "Blob"}),
-    () => JSON.stringify({unsubscribe: "Blob"}),
-    message => message.type === "Blob"
-).pipe(
-    map(message => {
-        if (message.articles && message.articles.length > 0) {
-            return message.articles;
-        }
-        return { message: "No data!" };
-    })
-);
-blobMessages$.pipe(
-    map(message => {
-        if (message.articles && message.articles.length > 0) {
-            return message.articles;
-        }
-        return { message: "No data!" };
-    })
-);
-const news = concat(blobMessages$, binary);
-
 
 WebSocketSubject.subscribe(
     response => {
@@ -104,7 +90,7 @@ WebSocketSubject.subscribe(
 
 chat.subscribe(message => console.log(`Comming from Chat channel, ${message}`));
 
-news.subscribe(({articles}) => {
+news$.subscribe(articles => {
     if (articles.length >= 3) {
         const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
         carusellActive.forEach((card, index) => {
