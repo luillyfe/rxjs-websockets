@@ -1,19 +1,64 @@
 #!/usr/bin/env node
 const app = require("../app");
 const http = require("http").Server(app);
-const io = require("socket.io")(http);
+const https = require('https');
+const WebSocket = require("ws");
+const wss = new WebSocket.Server({ server: http });
+
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').load();
+}
+
+const dataSourceUrl = (topic = "Google", page = 1) => "https://newsapi.org/v2/everything?" +
+    "q="+ topic +"&" +
+    "from=2018-10-13&" +
+    "sortBy=popularity&" +
+    "page="+ page +"&" +
+    "apiKey="+ process.env.API_KEY +"";
+
 const port = process.env.PORT || 3200;
+
 
 http.listen(port, () => {
     console.log(`Server started and listening on ${port} port`);
 });
 
-io.on("connection", socket => {
-    console.log("User connected!");
-    socket.on("disconnect", () => {
-        console.log("user disconnected");
-    });
-    socket.on("chat message", msg => {
-        io.emit("chat message", msg);
-    });
+const news = url => new Promise((resolve, reject) => {
+    https.get(url, response => {
+        let data = "";
+        response.on("data", chunk => {
+            data += chunk;
+        });
+        response.on("end", () => {
+            resolve(JSON.parse(data));
+        });
+    }).on("error", error => reject(error));
+});
+
+
+wss.on("connection", ws => {
+    let page = 1, topic = "Game of thrones";
+
+    //send immediatly a feedback to the incoming connection
+    ws.send('{"message": "Conecction successfull!", "state": "ok"}');
+
+    // look for news every 5 seconds en send them to the client.
+    setInterval(() => {
+        news(dataSourceUrl(topic, page))
+            .then(response => {
+                if (response.status === "ok") {
+                    response.articles.length = 3;
+                    ws.send(JSON.stringify(response.articles));
+                } else {
+                    console.log(response.message);
+                    ws.send('{"message": "Something were wring!", "state": "Service Unavailable"}');
+                }
+            });
+        page++;
+    }, 10000);
+
+    ws.on("message", message => {
+        console.log(message);
+        topic = message;
+    })
 });

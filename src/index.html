@@ -4,23 +4,64 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
-    </style>
     <title>Rxjs Web Sockets</title>
 </head>
 <body>
-<ul id="messages"></ul>
-<form action="" id="form">
-    <input id="m" autocomplete="off" /><button>Send</button>
-</form>
+<div id="app" class="container-fluid mt-1">
+    <div class="card">
+        <div class="card-header">
+            <p>It is going to give you news every 10 seconds, each button represent a topic
+                if you are interes in some topic in special clicks on it. Clicking on a topic
+                does not mean you are going to get the result right away, but in the next emission of data</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <button class="list-group-item btn btn-primary">Cooking</button>
+            <button class="list-group-item btn btn-primary">Friends</button>
+            <button class="list-group-item btn btn-primary">Netflix</button>
+            <button class="list-group-item btn btn-primary">Snapchat</button>
+            <button class="list-group-item btn btn-primary">Tesla</button>
+            <button class="list-group-item btn btn-primary">Google</button>
+        </ul>
+    </div>
+    <div class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="card" style="width: 18rem;">
+                    <img class="card-img-top" src="https://via.placeholder.com/350x150" alt="Card image cap">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                        <a href="#" class="btn btn-primary full-news">Go to full news</a>
+                    </div>
+                </div>
+                <div class="card" style="width: 18rem;">
+                    <img class="card-img-top" src="https://via.placeholder.com/350x150" alt="Card image cap">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                        <a href="#" class="btn btn-primary full-news">Go to full news</a>
+                    </div>
+                </div>
+                <div class="card" style="width: 18rem;">
+                    <img class="card-img-top" src="https://via.placeholder.com/350x150" alt="Card image cap">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                        <a href="#" class="btn btn-primary full-news">Go to full news</a>
+                    </div>
+                </div>
+            </div>
+            <a class="carousel-control-prev" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+    </div>
+</div>
 <script src="./app.js"></script>
 </body>
 </html>
