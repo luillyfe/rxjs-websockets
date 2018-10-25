@@ -47,6 +47,7 @@ wss.on("connection", ws => {
         news(dataSourceUrl(topic, page))
             .then(response => {
                 if (response.status === "ok") {
+                    response.articles.length = 3;
                     ws.send(JSON.stringify(response.articles));
                 } else {
                     console.log(response.message);

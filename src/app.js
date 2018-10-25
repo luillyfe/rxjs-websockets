@@ -35,12 +35,14 @@ subject.subscribe(response => {
         const topics = document.querySelector(".list-group.list-group-flush");
         topics.addEventListener("click", setTopic);
     } else {
-        console.log(response);
-
-        const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
-        carusellActive.forEach((card, index) => {
-            const {urlToImage, author, content, url} = response[index];
-            setCardInfo(card, {urlToImage, author, content, url});
-        });
+        if (response.length >= 3) {
+            const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
+            carusellActive.forEach((card, index) => {
+                const {urlToImage, author, content, url} = response[index];
+                setCardInfo(card, {urlToImage, author, content, url});
+            });
+        } else {
+            console.log("We are having problems getting the news, please try again later!");
+        }
     }
 });
