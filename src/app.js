@@ -3,30 +3,17 @@ import "./styles.css";
 import "babel-polyfill";
 import { webSocket } from "rxjs/webSocket";
 import { map } from "rxjs/operators";
-import { Observable } from "rxjs";
+import { fromEvent } from "rxjs";
 
 
-const reader = new FileReader(), obs = {
-    next(articles) {
-        if (articles && articles.length >= 3) {
-            const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
-            carusellActive.forEach((card, index) => {
-                const {urlToImage, author, content, url} = articles[index];
-                setCardInfo(card, {urlToImage, author, content, url});
-            });
-        } else {
-            console.log("It looks like there is not more content related to this topic. We switched the topic.");
-            setTopic();
-        }
-    },
-    error(error) { console.log(error); },
-    complete() { console.log("This is over!"); }
-};
+const reader = new FileReader();
 let chunks = [];
-reader.onloadend = event => {
-    const response = new TextDecoder("utf-8").decode(event.target.result);
-    obs.next(JSON.parse(response).articles);
-};
+const news$ = fromEvent(reader, "loadend").pipe(
+    map(event => {
+        const response = new TextDecoder("utf-8").decode(event.target.result);
+        return JSON.parse(response).articles;
+    })
+);
 const WebSocketSubject = webSocket({
     url: "ws://localhost:3200",
     deserializer: ({data}) => {
@@ -95,5 +82,15 @@ WebSocketSubject.subscribe(
 
 chat$.subscribe(message => console.log(`Comming from Chat channel, ${message}`));
 
-const news$ = new Observable();
-news$.subscribe(obs);
+news$.subscribe(articles => {
+    if (articles && articles.length >= 3) {
+        const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
+        carusellActive.forEach((card, index) => {
+            const {urlToImage, author, content, url} = articles[index];
+            setCardInfo(card, {urlToImage, author, content, url});
+        });
+    } else {
+        console.log("It looks like there is not more content related to this topic. We switched the topic.");
+        setTopic();
+    }
+});
