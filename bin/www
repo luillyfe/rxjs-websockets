@@ -42,7 +42,7 @@ wss.on("connection", ws => {
             });
         }).on("error", console.log);
         page++;
-    }, 25000);
+    }, 15000);
 
     ws.on("message", message => {
         let formmatedMsg = JSON.parse(message);

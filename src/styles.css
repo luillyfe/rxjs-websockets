@@ -1,6 +1,6 @@
 .list-group-item {
     background-color: #ec0d8e;
-    width: 40%;
+    width: 30%;
 }
 
 .list-group-item, .list-group-item:last-child {
@@ -17,6 +17,7 @@
 .carousel-item, .carousel-item.active {
     display: flex;
     justify-content: space-evenly;
+    align-items: flex-start;
     margin-top: 15px;
 }
 
