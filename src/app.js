@@ -1,19 +1,19 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
-import "babel-polyfill";
 import { webSocket } from "rxjs/webSocket";
 import { map } from "rxjs/operators";
 import { fromEvent } from "rxjs";
+import { setCarouselInfo, brokenImg } from "./carousel";
 
 
 const reader = new FileReader();
-let chunks = [];
 const news$ = fromEvent(reader, "loadend").pipe(
     map(event => {
         const response = new TextDecoder("utf-8").decode(event.target.result);
         return JSON.parse(response).articles;
     })
 );
+let chunks = [];
 const WebSocketSubject = webSocket({
     url: "ws://localhost:3200",
     deserializer: ({data}) => {
@@ -32,32 +32,8 @@ const WebSocketSubject = webSocket({
         return { type: "No data" };
     }
 });
-
-
 const setTopic = (event = {target: {innerText: "Technology"}}) => {
     WebSocketSubject.next(JSON.stringify(event.target.innerText));
-};
-const brokenImg = event => {
-    event.target.attr('src', 'https://via.placeholder.com/350x150');
-};
-
-const setCardInfo = (
-    card = document,
-    options = {
-        urlToImage: "https://via.placeholder.com/350x150",
-        author: "Fermin Blanco",
-        content: "No content",
-        url: "#"
-    }) => {
-    const image = card.querySelector(".card-img-top");
-    const title = card.querySelector(".card-title");
-    const text = card.querySelector(".card-text");
-    const fullNews = card.querySelector(".full-news");
-
-    image.src = options.urlToImage;
-    title.innerText = options.author;
-    text.innerText = options.content;
-    fullNews.href = options.url;
 };
 
 const chat$ = WebSocketSubject.multiplex(
@@ -66,7 +42,10 @@ const chat$ = WebSocketSubject.multiplex(
     message => message.type === "chat"
 ).pipe(map(message => message.message));
 
-
+/**
+ * the Subject that holds the actual connection to the server. Use 'send' method
+ * to communicate to the Server.
+ * */
 WebSocketSubject.subscribe(
     response => {
         if (response.state === "ok") {
@@ -80,15 +59,19 @@ WebSocketSubject.subscribe(
         }
     }, console.log, () => console.log("Websocket closed!"));
 
+/**
+ * Multiplexing creates a new Observable with this Subject as the source. Therefore
+ * they does not have a 'next' method, meaning you cannot use them to communicate
+ * with the server. However you still can use 'WebSocketSubject' to send messages
+ * to the server and attach to it a 'type' property to indicate the Channel that
+ * message belongs to.
+ * */
+
 chat$.subscribe(message => console.log(`Comming from Chat channel, ${message}`));
 
 news$.subscribe(articles => {
     if (articles && articles.length >= 3) {
-        const carusellActive = [...Array.from(document.querySelector(".carousel-item.active").children)];
-        carusellActive.forEach((card, index) => {
-            const {urlToImage, author, content, url} = articles[index];
-            setCardInfo(card, {urlToImage, author, content, url});
-        });
+        setCarouselInfo(articles);
     } else {
         console.log("It looks like there is not more content related to this topic. We switched the topic.");
         setTopic();
