@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 const app = require("../app");
 const http = require("http").Server(app);
-const https = require('https');
-const WebSocket = require("ws");
-const wss = new WebSocket.Server({ server: http });
+const https = require("https");
+const io = require("socket.io")(http);
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').load();
@@ -11,7 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const dataSourceUrl = (topic = "Google", page = 1) => "https://newsapi.org/v2/everything?" +
     "q="+ topic +"&" +
-    "from=2018-10-13&" +
+    // "from=2018-10-13&" +
     "sortBy=popularity&" +
     "page="+ page +"&" +
     "apiKey="+ process.env.API_KEY +"";
@@ -36,11 +35,8 @@ const news = url => new Promise((resolve, reject) => {
 });
 
 
-wss.on("connection", ws => {
+io.on("connection", socket => {
     let page = 1, topic = "Game of thrones";
-
-    //send immediatly a feedback to the incoming connection
-    ws.send('{"message": "Conecction successfull!", "state": "ok"}');
 
     // look for news every 5 seconds en send them to the client.
     setInterval(() => {
@@ -48,17 +44,17 @@ wss.on("connection", ws => {
             .then(response => {
                 if (response.status === "ok") {
                     response.articles.length = 3;
-                    ws.send(JSON.stringify(response.articles));
+                    socket.emit("articles", response.articles);
                 } else {
                     console.log(response.message);
-                    ws.send('{"message": "Something were wring!", "state": "Service Unavailable"}');
+                    socket.emit("error", "Something were wring!");
                 }
             });
         page++;
     }, 10000);
 
-    ws.on("message", message => {
-        console.log(message);
-        topic = message;
+    socket.on("topic", newTopic => {
+        console.log(`Topic changed to: ${newTopic}`);
+        topic = newTopic;
     })
 });
