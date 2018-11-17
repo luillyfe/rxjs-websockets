@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const dataSourceUrl = (topic = "Google", page = 1) => "https://newsapi.org/v2/everything?" +
     "q="+ topic +"&" +
-    "from=2018-10-13&" +
+    /*"from=2018-10-13&" +*/
     "sortBy=popularity&" +
     "page="+ page +"&" +
     "apiKey="+ process.env.API_KEY +"";
@@ -38,9 +38,6 @@ const news = url => new Promise((resolve, reject) => {
 
 wss.on("connection", ws => {
     let page = 1, topic = "Game of thrones";
-
-    //send immediatly a feedback to the incoming connection
-    ws.send('{"message": "Conecction successfull!", "state": "ok"}');
 
     // look for news every 5 seconds en send them to the client.
     setInterval(() => {
